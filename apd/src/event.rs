@@ -192,6 +192,10 @@ pub fn on_post_data_fs() -> Result<()> {
     if crate::module::load_sepolicy_rule().is_err() {
         warn!("load sepolicy.rule failed");
     }
+    
+    if let Err(e) = mount::mount_tmpfs(utils::get_tmp_path()) {
+        warn!("do temp dir mount failed: {}", e);
+    }
 
     // exec modules post-fs-data scripts
     // TODO: Add timeout
@@ -208,9 +212,7 @@ pub fn on_post_data_fs() -> Result<()> {
     if let Err(e) = mount_systemlessly(module_dir) {
         warn!("do systemless mount failed: {}", e);
     }
-    if let Err(e) = mount_systemlessly(utils::get_tmp_path()) {
-        warn!("do temp dir mount failed: {}", e);
-    }
+
     run_stage("post-mount", true);
 
     std::env::set_current_dir("/").with_context(|| "failed to chdir to /")?;
