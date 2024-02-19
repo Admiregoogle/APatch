@@ -6,6 +6,8 @@ use anyhow::Context;
 use retry::delay::NoDelay;
 #[cfg(any(target_os = "linux", target_os = "android"))]
 use sys_mount::{unmount, FilesystemType, Mount, MountFlags, Unmount, UnmountFlags};
+#[cfg(any(target_os = "linux", target_os = "android"))]
+use rustix::{fd::AsFd, fs::CWD, mount::*};
 
 use crate::defs::AP_OVERLAY_SOURCE;
 use log::{info, warn};
@@ -164,28 +166,27 @@ fn mount_overlayfs(
 #[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
     info!("mount tmpfs on {}", dest.as_ref().display());
-    let lower_dirs = "tmpfs"; 
-    let options = format!(
-        "lowerdir={}",
-        lower_dirs
-    );
-    info!(
-        "mount overlayfs on {}, options={}",
-        dest.as_ref().display(),
-        options
-    );
-    Mount::builder()
-        .fstype(FilesystemType::from("overlay"))
-        .data(&options)
-        .flags(MountFlags::RDONLY)
-        .mount(AP_OVERLAY_SOURCE, dest.as_ref())
-        .with_context(|| {
-            format!(
-                "mount overlayfs on {} options {} failed",
-                dest.as_ref().display(),
-                options
-            )
-        })?;
+    if let Result::Ok(fs) = fsopen("tmpfs", FsOpenFlags::FSOPEN_CLOEXEC) {
+        let fs = fs.as_fd();
+        fsconfig_set_string(fs, "source", AP_OVERLAY_SOURCE)?;
+        fsconfig_create(fs)?;
+        let mount = fsmount(fs, FsMountFlags::FSMOUNT_CLOEXEC, MountAttrFlags::empty())?;
+        move_mount(
+            mount.as_fd(),
+            "",
+            CWD,
+            dest.as_ref(),
+            MoveMountFlags::MOVE_MOUNT_F_EMPTY_PATH,
+        )?;
+    } else {
+        mount(
+            KSU_OVERLAY_SOURCE,
+            dest.as_ref(),
+            "tmpfs",
+            MountFlags::empty(),
+            "",
+        )?;
+    }
     Ok(())
 }
 
