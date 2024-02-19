@@ -180,7 +180,7 @@ pub fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
         )?;
     } else {
         mount(
-            KSU_OVERLAY_SOURCE,
+            AP_OVERLAY_SOURCE,
             dest.as_ref(),
             "tmpfs",
             MountFlags::empty(),
