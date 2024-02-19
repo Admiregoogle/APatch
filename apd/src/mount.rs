@@ -165,7 +165,6 @@ fn mount_overlayfs(
 pub fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
     info!("mount tmpfs on {}", dest.as_ref().display());
     let lower_dirs = "tmpfs"; 
-    let lower_dirs = "tmpfs"; 
     let options = format!(
         "lowerdir={}",
         lower_dirs
