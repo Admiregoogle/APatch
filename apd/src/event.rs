@@ -208,7 +208,7 @@ pub fn on_post_data_fs() -> Result<()> {
     if let Err(e) = mount_systemlessly(module_dir) {
         warn!("do systemless mount failed: {}", e);
     }
-    if let Err(e) = mount::mount_systemlessly(utils::get_tmp_path()) {
+    if let Err(e) = mount_systemlessly(utils::get_tmp_path()) {
         warn!("do temp dir mount failed: {}", e);
     }
     run_stage("post-mount", true);
