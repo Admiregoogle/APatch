@@ -183,7 +183,7 @@ pub fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
             AP_OVERLAY_SOURCE,
             dest.as_ref(),
             "tmpfs",
-            MountFlags::empty(),
+            rustix::fs::MountFlags::empty(),
             "",
         )?;
     }
