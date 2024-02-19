@@ -164,11 +164,9 @@ fn mount_overlayfs(
 #[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn mount_tmpfs(dest: impl AsRef<Path>) -> Result<()> {
     info!("mount tmpfs on {}", dest.as_ref().display());
-    let lowest: Vec<String> = Vec::new(); // 空的字符串切片作为默认值
     let lower_dirs = "tmpfs"; 
     let options = format!(
-        "lowerdir={}:{}",
-        lower_dirs.join(":"),
+        "lowerdir={}",
         lowest.as_ref().display()
     );
     info!(
