@@ -33,6 +33,7 @@ class APApplication : Application() {
     }
     companion object {
         val APD_PATH = "/data/adb/apd"
+        val KSUD_PATH = "/data/adb/ksud"
         val KPATCH_PATH = "/data/adb/kpatch"
         val KPATCH_SHADOW_PATH = "/system/bin/truncate"
         val APATCH_FLODER = "/data/adb/ap/"
@@ -126,6 +127,7 @@ class APApplication : Application() {
                     "cp -f ${nativeDir}/libapd.so ${APD_PATH}",
                     "chmod +x ${APD_PATH}",
                     "ln -s ${APD_PATH} ${APD_LINK_PATH}",
+                    "ln -s ${APD_PATH} ${KSUD_PATH}",
                     "restorecon ${APD_PATH}",
 
                     "cp -f ${nativeDir}/libmagiskpolicy.so ${MAGISKPOLICY_BIN_PATH}",
