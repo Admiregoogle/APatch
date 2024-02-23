@@ -92,7 +92,11 @@ jobs:
           alias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
-
+      - name: Upload Release apk
+        uses: actions/upload-artifact@v3
+        with:
+          name: APatch-Release
+          path: ${{steps.sign_app.outputs.signedReleaseFile}}
       - name: Release apk
         env: 
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
