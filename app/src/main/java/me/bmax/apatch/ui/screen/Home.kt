@@ -1,14 +1,9 @@
 package me.bmax.apatch.ui.screen
 
-import android.Manifest
-import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.PowerManager
 import android.system.Os
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -45,16 +40,14 @@ import androidx.compose.ui.unit.dp
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import dev.utils.app.permission.PermissionUtils
-import dev.utils.app.permission.PermissionUtils.PermissionCallback
 import me.bmax.apatch.util.*
 import me.bmax.apatch.*
 import me.bmax.apatch.R
 import me.bmax.apatch.ui.component.ConfirmDialog
-import me.bmax.apatch.ui.screen.destinations.PatchScreenDestination
-import me.bmax.apatch.ui.screen.destinations.PatchSettingDestination
+import me.bmax.apatch.ui.screen.destinations.PatchesDestination
 import me.bmax.apatch.util.reboot
 import me.bmax.apatch.ui.screen.destinations.SettingScreenDestination
+import me.bmax.apatch.ui.viewmodel.PatchesViewModel
 
 @RootNavGraph(start = true)
 @Destination
@@ -76,7 +69,7 @@ fun HomeScreen(navigator: DestinationsNavigator) {
         if(showPatchFloatAction) {
             ExtendedFloatingActionButton(
                 onClick = {
-                    navigator.navigate(PatchSettingDestination(true))
+                    navigator.navigate(PatchesDestination(PatchesViewModel.PatchMode.PATCH))
                 },
                 icon = { Icon(Icons.Filled.InstallMobile, "install") },
                 text = { Text(text = stringResource(id = R.string.patch)) },
@@ -154,61 +147,10 @@ fun AuthSuperKey(showDialog: MutableState<Boolean>) {
                 enabled = enable,
                 onClick = {
                     showDialog.value = false
-                    apApp.updateSuperKey(key)
+                    APApplication.superKey = key
                 }
             ) {
                 Text(stringResource(id = android.R.string.ok))
-            }
-        },
-    )
-}
-
-@Composable
-fun StartPatch(showDialog: MutableState<Boolean>, navigator: DestinationsNavigator) {
-    var key by remember { mutableStateOf("") }
-    var enable by remember { mutableStateOf(false) }
-
-    val selectBootimgLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) {
-        if (it.resultCode != Activity.RESULT_OK) {
-            return@rememberLauncherForActivityResult
-        }
-        val data = it.data ?: return@rememberLauncherForActivityResult
-        val uri = data.data ?: return@rememberLauncherForActivityResult
-        navigator.navigate(PatchScreenDestination(uri, key, true))
-    }
-
-    AlertDialog(
-        onDismissRequest = { showDialog.value = false },
-        title = { Text(stringResource(id = R.string.home_patch_set_key_title)) },
-        text = {
-            Column {
-                Text(stringResource(id = R.string.home_patch_set_key_desc))
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
-                    value = key,
-                    onValueChange = {
-                        key = it;
-                        enable = ! it.isEmpty()
-                    },
-                    label = { Text(stringResource(id = R.string.super_key)) },
-                    visualTransformation = VisualTransformation.None,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        },
-        confirmButton = {
-            Button(
-                enabled = enable,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_GET_CONTENT)
-                    intent.type = "*/*"
-                    selectBootimgLauncher.launch(intent)
-                }
-            ) {
-                Text(stringResource(id = R.string.home_patch_next_step))
             }
         },
     )
@@ -231,8 +173,7 @@ private fun TopBar(onSettingsClick: () -> Unit) {
         IconButton(onClick = {
             showDropdown = true
         }) {
-            Icon(
-                imageVector = Icons.Filled.Refresh,
+            Icon(imageVector = Icons.Filled.Refresh,
                 contentDescription = stringResource(id = R.string.reboot)
             )
 
@@ -352,7 +293,12 @@ private fun KStatusCard(kpState: APApplication.State, navigator: DestinationsNav
                                     showAuthKeyDialog.value = true
                                 }
                                 kpState.equals(APApplication.State.KERNELPATCH_NEED_UPDATE) -> {
-                                    navigator.navigate(PatchScreenDestination(null, apApp.getSuperKey(), true))
+                                    // todo: remove legacy compact for kp < 0.9.0
+                                    if(Version.installedKPVUInt() < 0x900u) {
+                                        navigator.navigate(PatchesDestination(PatchesViewModel.PatchMode.PATCH))
+                                    } else {
+                                        navigator.navigate(PatchesDestination(PatchesViewModel.PatchMode.UPDATE))
+                                    }
                                 }
                                 kpState.equals(APApplication.State.KERNELPATCH_NEED_REBOOT) -> {
                                     reboot()
@@ -361,8 +307,8 @@ private fun KStatusCard(kpState: APApplication.State, navigator: DestinationsNav
                                     // Do nothing
                                 }
                                 else -> {
-                                    APApplication.uninstallKpatch()
-                                    navigator.navigate(PatchScreenDestination(null, apApp.getSuperKey(), false))
+                                    APApplication.uninstallApatch()
+                                    navigator.navigate(PatchesDestination(PatchesViewModel.PatchMode.UNPATCH))
                                 }
                             }
                         },

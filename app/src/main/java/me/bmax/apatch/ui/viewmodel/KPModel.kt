@@ -6,17 +6,28 @@ import androidx.compose.runtime.Immutable
 import kotlinx.android.parcel.Parcelize
 
 object KPModel {
-    enum class ExtraType {
-        NONE,
-        KPM,
-        SHELL,
-        EXEC,
-        RAW
+
+    enum class TriggerEvent(val event: String) {
+        PAGING_INIT("paging-init"),
+        PRE_KERNEL_INIT("pre-kernel-init"),
+        POST_KERNEL_INIT("post-kernel-init"),
+    }
+
+
+    enum class ExtraType(val desc: String) {
+        NONE("none"),
+        KPM("kpm"),
+        SHELL("shell"),
+        EXEC("exec"),
+        RAW("raw"),
+        ANDROID_RC("android_rc");
     }
 
     interface IExtraInfo: Parcelable {
         var type: ExtraType
         var name: String
+        var event: String
+        var args: String
     }
 
     @Immutable
@@ -25,11 +36,12 @@ object KPModel {
     data class KPMInfo(
         override var type: ExtraType,
         override var name: String,
+        override var event: String,
+        override var args: String,
         var version: String,
         var license: String,
         var author: String,
         var description: String,
-        var args: String,
     ): IExtraInfo {}
 
     @Immutable
@@ -39,7 +51,7 @@ object KPModel {
         var version: String,
         var compileTime: String,
         var config: String,
-        val superKey: String
+        var superKey: String
     ): Parcelable {}
 
     @Immutable
@@ -47,18 +59,7 @@ object KPModel {
     @Keep
     data class KImgInfo(
         var banner: String,
-        var patched: Boolean
+        var patched: Boolean,
     ): Parcelable {}
-
-
-    @Immutable
-    @Parcelize
-    @Keep
-    data class ImgPatchInfo(
-        var kimgInfo: KImgInfo,
-        var kpimgInfo: KPImgInfo,
-        var existedExtras: MutableList<IExtraInfo>,
-        var addedExtras: MutableList<IExtraInfo>
-    ): Parcelable{}
 
 }
