@@ -68,9 +68,7 @@ pub fn mount_image(src: &str, target: &str, autodrop: bool) -> Result<()> {
                 .arg(target)
                 .status();
         if let Err(e) = result {
-            Err(anyhow::anyhow!(
-                "mount partition: {src} -> {target} failed: {e}"
-            ))
+            Err(())
         } else {
             Ok(())
         }
