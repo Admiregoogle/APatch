@@ -10,7 +10,7 @@ use crate::{defs, event, module, utils};
 
 /// APatch cli
 #[derive(Parser, Debug)]
-#[command(author, version = defs::VERSION_NAME, about, long_about = None)]
+#[command(author, version = defs::VERSION_CODE, about, long_about = None)]
 struct Args {
     #[command(subcommand)]
     command: Commands,
@@ -75,9 +75,9 @@ pub fn run() -> Result<()> {
     #[cfg(not(target_os = "android"))]
     env_logger::init();
 
-    // the kernel executes su with argv[0] = "/system/bin/kp" and replace it with us
+    // the kernel executes su with argv[0] = "/system/bin/kp" or "su" and replace it with us
     let arg0 = std::env::args().next().unwrap_or_default();
-    if arg0 == "/system/bin/kp" {
+    if arg0 == "/system/bin/kp" || arg0 == "su" {
         return crate::apd::root_shell();
     }
 
@@ -106,7 +106,6 @@ pub fn run() -> Result<()> {
         }
 
         Commands::Services => event::on_services(),
-
     };
 
     if let Err(e) = &result {

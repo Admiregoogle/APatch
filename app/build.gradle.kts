@@ -26,12 +26,21 @@ android {
     namespace = "me.bmax.apatch"
 
     buildTypes {
+        debug {
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
+            multiDexEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
 
     buildFeatures {
         aidl = true
@@ -39,12 +48,16 @@ android {
         compose = true
     }
 
+    defaultConfig {
+        buildConfigField("String", "buildKPV", """"$kernelPatchVersion"""")
+    }
+
     kotlinOptions {
         jvmTarget = "17"
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
     }
 
     packaging {
@@ -53,6 +66,11 @@ android {
         }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "okhttp3/**"
+            excludes += "kotlin/**"
+            excludes += "org/**"
+            excludes += "**.properties"
+            excludes += "**.bin"
         }
     }
 
@@ -126,6 +144,7 @@ dependencies {
     implementation(libs.androidx.runtime.livedata)
     implementation(libs.timber)
     implementation(libs.devappx)
+    implementation(libs.ini4j)
 
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
