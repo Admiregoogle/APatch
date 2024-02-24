@@ -59,9 +59,8 @@ impl Drop for AutoMountExt4 {
 #[allow(dead_code)]
 #[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn mount_image(src: &str, target: &str, autodrop: bool) -> Result<()> {
-    if mount_ext4(src, target){
-        Ok(())
-    } else {
+   if let Err(e) = mount_ext4(src, target){
+        warn!("mount failed: {:#}", e);
         let result = std::process::Command::new("mount")
                 //.arg("-t")
                 //.arg("ext4")
@@ -76,6 +75,8 @@ pub fn mount_image(src: &str, target: &str, autodrop: bool) -> Result<()> {
             Ok(())
         }
     }
+    
+    Ok(())
 
 }
 
