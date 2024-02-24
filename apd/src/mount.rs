@@ -62,20 +62,17 @@ pub fn mount_image(src: &str, target: &str, autodrop: bool) -> Result<()> {
     if let Err(e) = mount_ext4(src, target) {
         warn!("mount failed: {:#}", e);
         let result = std::process::Command::new("mount")
-                //.arg("-t")
-                //.arg("ext4")
                 .arg(src)
                 .arg(target)
                 .status();
         if let Err(e) = result {
-            return Err(e);
+            return Err(anyhow::Error::new(e));
         } else {
             Ok(())
         }
     } else {
         Ok(())
     }
-
 }
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
